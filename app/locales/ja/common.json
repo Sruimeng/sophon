@@ -1,0 +1,27 @@
+{
+  "toast": {
+    "copy": "クリップボードにコピーしました",
+    "success": "成功",
+    "error": "エラー"
+  },
+  "404": {
+    "title": "ページが見つかりません",
+    "description": "お探しのページは存在しません。",
+    "button": "ホームに戻る"
+  },
+  "navigation": {
+    "home": "ホーム",
+    "about": "について",
+    "language": "言語"
+  },
+  "common": {
+    "submit": "送信",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "save": "保存",
+    "delete": "削除",
+    "edit": "編集",
+    "loading": "読み込み中...",
+    "welcome": "ようこそ！"
+  }
+}

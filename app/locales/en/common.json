@@ -1,0 +1,27 @@
+{
+  "toast": {
+    "copy": "Copied to clipboard",
+    "success": "Success",
+    "error": "Error"
+  },
+  "404": {
+    "title": "Page Not Found",
+    "description": "The page you are looking for does not exist.",
+    "button": "Return to Home"
+  },
+  "navigation": {
+    "home": "Home",
+    "about": "About",
+    "language": "Language"
+  },
+  "common": {
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "welcome": "Welcome to your new app!"
+  }
+}

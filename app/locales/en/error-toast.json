@@ -1,0 +1,8 @@
+{
+  "1000": "Unknown server error occurred. Please try again later.",
+  "1004": "Invalid parameter",
+  "1005": "Insufficient permissions",
+  "2019": "Resource not found",
+  "network": "Network error. Please check your connection.",
+  "timeout": "Request timeout. Please try again."
+}

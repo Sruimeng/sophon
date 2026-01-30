@@ -1,0 +1,11 @@
+packages:
+  - '.'
+
+catalog:
+  vite: ^6.3.5
+  unocss: ^66.2.0
+  '@unocss/reset': ^66.2.0
+  react: ^19.0.0
+  '@types/react': ^19.0.0
+  react-dom: ^19.0.0
+  '@types/react-dom': ^19.0.0

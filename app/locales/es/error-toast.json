@@ -1,0 +1,8 @@
+{
+  "1000": "Se produjo un error desconocido en el servidor. Por favor, inténtelo de nuevo más tarde.",
+  "1004": "Parámetro inválido",
+  "1005": "Permisos insuficientes",
+  "2019": "Recurso no encontrado",
+  "network": "Error de red. Por favor, verifique su conexión.",
+  "timeout": "Tiempo de espera agotado. Por favor, inténtelo de nuevo."
+}

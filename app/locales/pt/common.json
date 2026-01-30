@@ -1,0 +1,27 @@
+{
+  "toast": {
+    "copy": "Copiado para a área de transferência",
+    "success": "Sucesso",
+    "error": "Erro"
+  },
+  "404": {
+    "title": "Página não encontrada",
+    "description": "A página que você procura não existe.",
+    "button": "Voltar ao início"
+  },
+  "navigation": {
+    "home": "Início",
+    "about": "Sobre",
+    "language": "Idioma"
+  },
+  "common": {
+    "submit": "Enviar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "save": "Salvar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "loading": "Carregando...",
+    "welcome": "Bem-vindo!"
+  }
+}

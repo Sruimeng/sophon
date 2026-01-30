@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+export NVS_DIR="$HOME/.nvs/default/bin"
+export PATH="$NVS_DIR:$PATH"
+
+pnpm typecheck
+
+npx lint-staged

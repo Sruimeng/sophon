@@ -1,0 +1,25 @@
+# Logs
+logs
+*.log
+pnpm-debug.log*
+
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.DS_Store
+.vscode
+tmp
+/node_modules
+
+/packages/*/node_modules
+/packages/*/types
+/packages/*/doc
+/packages/*/dist
+/packages/*/.react-router
+
+/tests/node_modules
+/e2e/node_modules
+/playground/node_modules
+

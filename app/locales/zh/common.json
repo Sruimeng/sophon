@@ -1,0 +1,27 @@
+{
+  "toast": {
+    "copy": "已复制到剪贴板",
+    "success": "成功",
+    "error": "错误"
+  },
+  "404": {
+    "title": "页面未找到",
+    "description": "您访问的页面不存在。",
+    "button": "返回首页"
+  },
+  "navigation": {
+    "home": "首页",
+    "about": "关于",
+    "language": "语言"
+  },
+  "common": {
+    "submit": "提交",
+    "cancel": "取消",
+    "confirm": "确认",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "loading": "加载中...",
+    "welcome": "欢迎使用！"
+  }
+}

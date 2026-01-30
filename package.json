@@ -1,0 +1,100 @@
+{
+  "name": "my-react-app",
+  "version": "0.1.0",
+  "description": "A modern React SPA application built with React Router v7",
+  "author": "",
+  "license": "MIT",
+  "private": true,
+  "sideEffects": false,
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "keywords": [
+    "react",
+    "react-router",
+    "spa",
+    "vite",
+    "typescript",
+    "unocss"
+  ],
+  "scripts": {
+    "prepare": "husky",
+    "dev": "react-router dev",
+    "preview": "vite preview",
+    "lint": "eslint . --fix",
+    "clear": "rm -rf ./dist ./pruned",
+    "typecheck": "tsc --noEmit",
+    "build": "react-router build",
+    "build-production": "NODE_ENV=production react-router build --mode production",
+    "build-staging": "NODE_ENV=staging react-router build --mode staging",
+    "pruned": "pnpm --filter=. --prod deploy pruned"
+  },
+  "dependencies": {
+    "@react-router/fs-routes": "^7.6.2",
+    "dayjs": "^1.11.13",
+    "i18next": "^25.7.3",
+    "i18next-browser-languagedetector": "^8.0.0",
+    "immer": "^11.1.3",
+    "lodash-es": "^4.17.21",
+    "ofetch": "^1.4.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.2",
+    "react-i18next": "^16.5.1",
+    "react-router": "^7.6.2",
+    "zod": "^4.3.5",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.23.0",
+    "@react-router/dev": "^7.6.2",
+    "@types/eslint__js": "^8.42.3",
+    "@types/lodash-es": "^4.17.12",
+    "@types/node": "^25.0.3",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.28.0",
+    "@unocss/eslint-config": "^66.2.0",
+    "@unocss/postcss": "^66.2.0",
+    "@unocss/reset": "^66.2.0",
+    "eslint": "^9.23.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-prettier": "^5.2.5",
+    "eslint-plugin-react": "^7.37.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "globals": "^17.0.0",
+    "husky": "9.0.11",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.3.3",
+    "prettier-plugin-organize-imports": "^4.1.0",
+    "stylelint": "^16.10.0",
+    "stylelint-config-standard": "^39.0.1",
+    "stylelint-prettier": "^5.0.2",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.28.0",
+    "unocss": "^66.2.0",
+    "unocss-preset-animations": "^1.1.1",
+    "unocss-preset-shadcn": "^1.0.1",
+    "vite": "^7.3.1",
+    "vite-env-only": "^3.0.3",
+    "vite-tsconfig-paths": "^6.0.3"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix"
+    ]
+  },
+  "env": {
+    "browser": true,
+    "commonjs": true,
+    "es6": true
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.6.0"
+  },
+  "packageManager": "pnpm@9.6.0"
+}
