@@ -20,6 +20,9 @@ export const I18nConfig = {
   supportedLngs: Lngs.map((item) => item.code),
   fallbackLng: 'en',
   defaultNS: 'common',
+  react: {
+    useSuspense: false,
+  },
 };
 
 export const resources = {

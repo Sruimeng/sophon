@@ -15,6 +15,26 @@ export const links = () => {
   ];
 };
 
+export function HydrateFallback() {
+  return (
+    <html lang="en">
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <Meta />
+        <Links />
+        <title>Loading...</title>
+      </head>
+      <body className="select-none">
+        <div className="flex min-h-screen items-center justify-center bg-obsidian-100 text-text-primary">
+          <div className="text-2xl">Loading...</div>
+        </div>
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
 const App: React.FC = () => {
   const { i18n } = useTranslation();
   const [theme] = useTheme();

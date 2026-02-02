@@ -25,7 +25,8 @@
     "experimentalDecorators": true,
     "types": ["vite/client", "node"],
     "paths": {
-      "@/*": ["./app/*"]
+      "@/*": ["./app/*"],
+      "~/*": ["./app/*"]
     }
   }
 }

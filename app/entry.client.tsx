@@ -7,28 +7,38 @@ import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';
 
 async function main() {
-  await i18next
-    .use(initReactI18next)
-    .use(LanguageDetector)
-    .init({
-      ...I18nConfig,
-      resources,
-      detection: {
-        order: ['localStorage', 'navigator'],
-        caches: ['localStorage'],
-      },
+  console.log('[entry.client] Starting hydration...');
+
+  try {
+    await i18next
+      .use(initReactI18next)
+      .use(LanguageDetector)
+      .init({
+        ...I18nConfig,
+        resources,
+        detection: {
+          order: ['localStorage', 'navigator'],
+          caches: ['localStorage'],
+        },
+      });
+
+    console.log('[entry.client] i18n initialized, hydrating...');
+
+    startTransition(() => {
+      hydrateRoot(
+        document,
+        <I18nextProvider i18n={i18next}>
+          <StrictMode>
+            <HydratedRouter />
+          </StrictMode>
+        </I18nextProvider>,
+      );
     });
 
-  startTransition(() => {
-    hydrateRoot(
-      document,
-      <I18nextProvider i18n={i18next}>
-        <StrictMode>
-          <HydratedRouter />
-        </StrictMode>
-      </I18nextProvider>,
-    );
-  });
+    console.log('[entry.client] Hydration complete');
+  } catch (error) {
+    console.error('[entry.client] Hydration failed:', error);
+  }
 }
 
-main();
+main().catch((err) => console.error('[entry.client] Fatal error:', err));

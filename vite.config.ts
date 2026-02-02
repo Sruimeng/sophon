@@ -12,6 +12,12 @@ export default defineConfig(() => ({
           if (id.includes('lodash-es') || id.includes('dayjs')) {
             return 'vendor-utils';
           }
+          if (id.includes('three') || id.includes('@react-three')) {
+            return 'vendor-3d';
+          }
+          if (id.includes('@mlc-ai/web-llm')) {
+            return 'vendor-ai';
+          }
         },
       },
     },
