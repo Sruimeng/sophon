@@ -1,22 +1,35 @@
 import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { checkWebGPU } from '~/lib/webgpu/check';
+import { initEngine, isEngineLoaded } from '~/lib/webllm/engine';
 import { tokenize } from '~/lib/webllm/tokenizer';
+import { generate } from '~/lib/webllm/generate';
 import { useInferenceStore } from '~/store/inference';
 
 const MODELS = [
+  { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC', name: 'Llama 3.2 1B (Lite)' },
   { id: 'Llama-3-8B-Instruct-q4f16_1-MLC', name: 'Llama 3 8B' },
   { id: 'Phi-3-mini-4k-instruct-q4f16_1-MLC', name: 'Phi 3 Mini' },
 ];
 
+type Phase = 'idle' | 'loading-model' | 'tokenizing' | 'inferring';
+
 export function PromptForm() {
-  const navigate = useNavigate();
+  const { t } = useTranslation();
   const setTokens = useInferenceStore((s) => s.setTokens);
   const setStatus = useInferenceStore((s) => s.setStatus);
+  const setGeneratedText = useInferenceStore((s) => s.setGeneratedText);
+  const addGeneratedToken = useInferenceStore((s) => s.addGeneratedToken);
+  const setCandidates = useInferenceStore((s) => s.setCandidates);
+  const setMetrics = useInferenceStore((s) => s.setMetrics);
+  const reset = useInferenceStore((s) => s.reset);
+  const temperature = useInferenceStore((s) => s.temperature);
+  const topP = useInferenceStore((s) => s.topP);
 
   const [prompt, setPrompt] = useState('');
   const [modelId, setModelId] = useState(MODELS[0].id);
-  const [loading, setLoading] = useState(false);
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
 
   const handleSubmit = useCallback(
@@ -24,60 +37,86 @@ export function PromptForm() {
       e.preventDefault();
 
       if (!prompt.trim()) {
-        setError('Prompt required');
+        setError(t('inference.promptRequired'));
         return;
       }
 
       if (!checkWebGPU()) {
-        setError('WebGPU not supported');
+        setError(t('inference.webgpuNotSupported'));
         return;
       }
 
-      setLoading(true);
       setError('');
-      setStatus('tokenizing');
+      reset();
 
       try {
-        const tokens = await tokenize(prompt);
+        // Phase 1: Load model (keep engine alive for continuous dialog)
+        if (!isEngineLoaded()) {
+          setPhase('loading-model');
+          setProgress(0);
+          setStatus('embedding');
 
+          await initEngine({
+            modelId,
+            device: 'webgpu',
+            progressCallback: setProgress,
+          });
+        }
+
+        // Phase 2: Tokenize
+        setPhase('tokenizing');
+        setStatus('tokenizing');
+
+        const tokens = await tokenize(prompt);
         setTokens(tokens);
+
+        // Phase 3: Inference (engine stays alive)
+        setPhase('inferring');
+        setStatus('inferring');
+
+        let tokenIndex = tokens.length;
+        const result = await generate({
+          prompt,
+          temperature,
+          topP,
+          maxTokens: 1024,
+          onToken: (tokenText, tokenId, candidates) => {
+            addGeneratedToken({
+              id: tokenId,
+              text: tokenText,
+              position: tokenIndex++,
+            });
+            if (candidates.length > 0) {
+              setCandidates(candidates);
+            }
+          },
+        });
+
+        setGeneratedText(result.text);
+        setMetrics(result.metrics);
         setStatus('complete');
-        navigate('/visualize');
+        setPrompt('');
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Tokenization failed');
+        const msg = err instanceof Error ? err.message : t('inference.failed');
+        setError(msg);
         setStatus('idle');
       } finally {
-        setLoading(false);
+        setPhase('idle');
       }
     },
-    [prompt, navigate, setTokens, setStatus]
+    [prompt, modelId, setTokens, setStatus, setGeneratedText, addGeneratedToken, setCandidates, setMetrics, reset, temperature, topP, t]
   );
 
-  return (
-    <form onSubmit={handleSubmit} className="w-full max-w-2xl space-y-6">
-      <div>
-        <label htmlFor="prompt" className="mb-2 block text-sm font-medium">
-          Input Text
-        </label>
-        <textarea
-          id="prompt"
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Enter text to tokenize..."
-          rows={4}
-          className="w-full rounded-lg border border-border-subtle bg-surface-secondary px-4 py-2 text-text-primary focus:border-core-blue focus:outline-none"
-        />
-      </div>
+  const isLoading = phase !== 'idle';
 
-      <div>
-        <label htmlFor="model" className="mb-2 block text-sm font-medium">
-          Model
-        </label>
+  return (
+    <form onSubmit={handleSubmit} className="w-full space-y-3">
+      <div className="flex gap-2">
         <select
-          id="model"
           value={modelId}
           onChange={(e) => setModelId(e.target.value)}
-          className="w-full rounded-lg border border-border-subtle bg-surface-secondary px-4 py-2 text-text-primary focus:border-core-blue focus:outline-none"
+          disabled={isLoading}
+          className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text)] focus:border-[var(--color-accent)] focus:outline-none disabled:opacity-50 transition-colors"
         >
           {MODELS.map((model) => (
             <option key={model.id} value={model.id}>
@@ -87,19 +126,50 @@ export function PromptForm() {
         </select>
       </div>
 
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          placeholder={t('inference.placeholder')}
+          disabled={isLoading}
+          className="flex-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-4 py-2 text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:border-[var(--color-accent)] focus:outline-none disabled:opacity-50 transition-colors"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSubmit(e);
+            }
+          }}
+        />
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="rounded-lg bg-gradient-to-r from-[#f87171] to-[#fb923c] px-6 py-2 text-white font-medium shadow-lg shadow-orange-500/20 transition-all hover:shadow-orange-500/40 hover:shadow-xl disabled:opacity-50 whitespace-nowrap"
+        >
+          {phase === 'loading-model'
+            ? `${progress}%`
+            : phase === 'tokenizing'
+              ? t('inference.tokenizing')
+              : phase === 'inferring'
+                ? t('inference.generating')
+                : t('inference.send')}
+        </button>
+      </div>
+
       {error && (
-        <div className="rounded-lg bg-status-error/10 px-4 py-2 text-sm text-status-error">
+        <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-2 text-sm text-red-400">
           {error}
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-lg bg-core-blue px-6 py-3 text-white transition-opacity hover:opacity-80 disabled:opacity-50"
-      >
-        {loading ? 'Processing...' : 'Tokenize & Visualize'}
-      </button>
+      {phase === 'loading-model' && (
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-bg-secondary)]">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-[#f87171] to-[#fb923c] transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      )}
     </form>
   );
 }

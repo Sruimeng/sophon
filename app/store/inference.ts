@@ -1,7 +1,9 @@
 import { create } from 'zustand';
-import type { AppStore, AttentionWeight, Token, TokenCandidate } from '~/types/inference';
+import type { AppStore, AttentionWeight, Token, TokenCandidate, InferenceMetrics } from '~/types/inference';
 
-export const useInferenceStore = create<AppStore>((set) => ({
+console.log('[inference store] Creating store...');
+
+export const useInferenceStore = create<AppStore>((set, get) => ({
   status: 'idle',
   tokens: [],
   attentionWeights: [],
@@ -9,9 +11,16 @@ export const useInferenceStore = create<AppStore>((set) => ({
   temperature: 0.7,
   topP: 0.9,
   currentLayer: 0,
+  generatedText: '',
+  generatedTokens: [],
+  metrics: null,
 
   setStatus: (status: AppStore['status']) => set({ status }),
-  setTokens: (tokens: Token[]) => set({ tokens }),
+  setTokens: (tokens: Token[]) => {
+    console.log('[inference store] setTokens called with', tokens.length, 'tokens');
+    set({ tokens });
+    console.log('[inference store] after setTokens, store tokens:', get().tokens.length);
+  },
   addAttentionWeights: (weights: AttentionWeight[]) =>
     set((state) => ({
       attentionWeights: [...state.attentionWeights, ...weights],
@@ -20,6 +29,12 @@ export const useInferenceStore = create<AppStore>((set) => ({
   setTemperature: (temperature: number) => set({ temperature }),
   setTopP: (topP: number) => set({ topP }),
   setCurrentLayer: (currentLayer: number) => set({ currentLayer }),
+  setGeneratedText: (generatedText: string) => set({ generatedText }),
+  addGeneratedToken: (token: Token) =>
+    set((state) => ({
+      generatedTokens: [...state.generatedTokens, token],
+    })),
+  setMetrics: (metrics: InferenceMetrics) => set({ metrics }),
   reset: () =>
     set({
       status: 'idle',
@@ -27,5 +42,8 @@ export const useInferenceStore = create<AppStore>((set) => ({
       attentionWeights: [],
       candidates: [],
       currentLayer: 0,
+      generatedText: '',
+      generatedTokens: [],
+      metrics: null,
     }),
 }));

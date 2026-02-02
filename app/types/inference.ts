@@ -19,6 +19,17 @@ export interface TokenCandidate {
   tokenId: number;
 }
 
+export interface InferenceMetrics {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  prefillTime?: number;      // ms for prompt processing
+  decodeTime?: number;       // ms for generation
+  tokensPerSecond?: number;  // decode speed
+  gpuVendor?: string;
+  maxBufferSize?: number;
+}
+
 export interface TokenMesh {
   token: Token;
   mesh: THREE.InstancedMesh;
@@ -55,6 +66,9 @@ export interface AppStore {
   temperature: number;
   topP: number;
   currentLayer: number;
+  generatedText: string;
+  generatedTokens: Token[];
+  metrics: InferenceMetrics | null;
 
   setStatus: (status: InferenceState['status']) => void;
   setTokens: (tokens: Token[]) => void;
@@ -63,6 +77,9 @@ export interface AppStore {
   setTemperature: (temp: number) => void;
   setTopP: (p: number) => void;
   setCurrentLayer: (layer: number) => void;
+  setGeneratedText: (text: string) => void;
+  addGeneratedToken: (token: Token) => void;
+  setMetrics: (metrics: InferenceMetrics) => void;
   reset: () => void;
 }
 

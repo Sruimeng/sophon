@@ -23,5 +23,42 @@
     "edit": "Редактировать",
     "loading": "Загрузка...",
     "welcome": "Добро пожаловать!"
+  },
+  "inference": {
+    "title": "Token Journey",
+    "subtitle": "Visualize LLM inference with WebGPU-powered 3D graphics",
+    "send": "Send",
+    "generating": "Generating...",
+    "tokenizing": "Tokenizing...",
+    "placeholder": "Enter prompt...",
+    "promptRequired": "Prompt required",
+    "webgpuNotSupported": "WebGPU not supported in this browser",
+    "failed": "Failed",
+    "layers": {
+      "title": "Transformer Layer",
+      "embedding": "Embedding",
+      "block": "Block"
+    },
+    "sampling": {
+      "temperature": "Temperature",
+      "topP": "Top-P"
+    },
+    "probability": {
+      "title": "Top Candidates"
+    },
+    "tokens": {
+      "input": "Input",
+      "generated": "Generated",
+      "output": "Output"
+    },
+    "metrics": {
+      "title": "Metrics",
+      "in": "In",
+      "out": "Out",
+      "speed": "Speed",
+      "time": "Time",
+      "gpu": "GPU",
+      "tokensPerSecond": "t/s"
+    }
   }
 }
