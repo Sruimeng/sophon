@@ -1,0 +1,15 @@
+node_modules
+dist
+pruned
+.git
+.github
+*.md
+.env*
+!.env.example
+llmdoc
+.husky
+.claude
+.vscode
+*.log
+coverage
+.DS_Store

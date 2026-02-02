@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  llm-viz:
+    image: ${ALIYUN_IMAGE:-llm-viz:latest}
+    container_name: llm_viz_app
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - TZ=Asia/Shanghai
+      - NODE_ENV=production
+      - PORT=8080
+    # 不占用宿主机端口,通过网络与Caddy通信
+    # ports:
+    #   - "8080:8080"
+    networks:
+      - app_network
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  app_network:
+    external: true
