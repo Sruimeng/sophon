@@ -14,6 +14,7 @@ export const useInferenceStore = create<AppStore>((set, get) => ({
   generatedText: '',
   generatedTokens: [],
   metrics: null,
+  tokenDelay: 500,
 
   setStatus: (status: AppStore['status']) => set({ status }),
   setTokens: (tokens: Token[]) => {
@@ -35,6 +36,7 @@ export const useInferenceStore = create<AppStore>((set, get) => ({
       generatedTokens: [...state.generatedTokens, token],
     })),
   setMetrics: (metrics: InferenceMetrics) => set({ metrics }),
+  setTokenDelay: (tokenDelay: number) => set({ tokenDelay }),
   reset: () =>
     set({
       status: 'idle',

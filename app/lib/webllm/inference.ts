@@ -1,6 +1,6 @@
 import type { AttentionWeight } from '~/types/inference';
+import { LAYER_COUNT } from '~/constants/inference';
 
-const LAYER_COUNT = 3;
 const MIN_WEIGHT = 0.05;
 const MAX_WEIGHT = 0.95;
 

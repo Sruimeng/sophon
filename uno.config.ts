@@ -7,6 +7,7 @@ import {
   transformerVariantGroup,
 } from 'unocss';
 import presetAnimations from 'unocss-preset-animations';
+import { theme as nexusTheme } from '@sruim/nexus-design';
 
 export default defineConfig({
   presets: [
@@ -22,7 +23,10 @@ export default defineConfig({
   ],
   transformers: [transformerDirectives(), transformerVariantGroup(), transformerCompileClass()],
   theme: {
+    ...nexusTheme,
     colors: {
+      // Merge existing custom colors with Nexus theme
+      ...(nexusTheme.colors || {}),
       // Legacy CSS variables
       background: 'rgba(var(--color-background) / <alpha-value>)',
       foreground: 'rgba(var(--color-foreground) / <alpha-value>)',
@@ -30,48 +34,6 @@ export default defineConfig({
       secondary: 'rgba(var(--color-secondary) / <alpha-value>)',
       accent: 'rgba(var(--color-accent) / <alpha-value>)',
       muted: 'rgba(var(--color-muted) / <alpha-value>)',
-
-      // Nexus Design System tokens
-      obsidian: {
-        100: '#0a0a0f',
-        200: '#12121a',
-        300: '#1a1a24',
-      },
-      steel: {
-        100: '#6b7280',
-        200: '#9ca3af',
-        300: '#d1d5db',
-      },
-      mist: {
-        100: '#e5e7eb',
-        200: '#f3f4f6',
-        300: '#f9fafb',
-      },
-      core: {
-        blue: '#3b82f6',
-      },
-      status: {
-        error: '#ef4444',
-        success: '#22c55e',
-        warning: '#f59e0b',
-      },
-      surface: {
-        primary: '#0a0a0f',
-        secondary: '#12121a',
-        dim: '#1a1a24',
-        hover: '#252530',
-      },
-      border: {
-        subtle: 'rgba(255, 255, 255, 0.1)',
-        dim: 'rgba(255, 255, 255, 0.05)',
-        focus: '#3b82f6',
-      },
-      text: {
-        primary: '#f9fafb',
-        secondary: '#9ca3af',
-        disabled: '#6b7280',
-        accent: '#3b82f6',
-      },
     },
   },
   rules: [

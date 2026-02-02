@@ -69,6 +69,7 @@ export interface AppStore {
   generatedText: string;
   generatedTokens: Token[];
   metrics: InferenceMetrics | null;
+  tokenDelay: number;
 
   setStatus: (status: InferenceState['status']) => void;
   setTokens: (tokens: Token[]) => void;
@@ -80,6 +81,7 @@ export interface AppStore {
   setGeneratedText: (text: string) => void;
   addGeneratedToken: (token: Token) => void;
   setMetrics: (metrics: InferenceMetrics) => void;
+  setTokenDelay: (delay: number) => void;
   reset: () => void;
 }
 

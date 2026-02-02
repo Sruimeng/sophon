@@ -1,4 +1,5 @@
 import { useTheme } from '@/hooks';
+import '@sruim/nexus-design/style.css';
 import { useTranslation } from 'react-i18next';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import 'virtual:uno.css';

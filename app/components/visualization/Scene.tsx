@@ -1,20 +1,42 @@
+import { useMemo, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
-import { TokenJourney } from './TokenJourney';
+import { OrbitControls, Html } from '@react-three/drei';
 import { ProbabilityRing } from './ProbabilityRing';
 import { useInferenceStore } from '~/store/inference';
-import { LAYER_COUNT } from '~/constants/inference';
 import * as THREE from 'three';
+import { useGeometryRegistry } from '~/lib/three/resource-manager';
+import { useTorusPool } from '~/lib/three/torus-pool';
 
 export function Scene() {
   const candidates = useInferenceStore((s) => s.candidates);
-  const currentLayer = useInferenceStore((s) => s.currentLayer);
+  const status = useInferenceStore((s) => s.status);
+  const registry = useGeometryRegistry();
+  const torusPool = useTorusPool();
 
-  const LAYER_HEIGHT = 3;
-  const LAYER_GAP = 0.5;
-  const LM_HEAD_LAYER = LAYER_COUNT - 1;
-  const ringY = 2 - LM_HEAD_LAYER * (LAYER_HEIGHT + LAYER_GAP);
-  const showRing = currentLayer >= LM_HEAD_LAYER && candidates.length > 0;
+  useEffect(() => {
+    return () => {
+      registry.disposeAll();
+      torusPool.dispose();
+    };
+  }, [registry, torusPool]);
+
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      const interval = setInterval(() => {
+        console.log('[3D Resource Monitor]', {
+          registry: registry.getStats(),
+          torusPool: torusPool.getStats(),
+        });
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [registry, torusPool]);
+
+  const ringY = 0;
+  const showRing = status === 'inferring' && candidates.length > 0;
+
+  const ringPosition = useMemo(() => new THREE.Vector3(0, ringY, 0), [ringY]);
+
   return (
     <Canvas
       gl={{
@@ -32,13 +54,32 @@ export function Scene() {
       <ambientLight intensity={0.4} />
       <directionalLight position={[10, 10, 5]} intensity={0.8} />
 
-      <TokenJourney />
-      {showRing && (
+      {showRing ? (
         <ProbabilityRing
           candidates={candidates}
           selectedTokenId={null}
-          position={new THREE.Vector3(0, ringY, 0)}
+          position={ringPosition}
         />
+      ) : (
+        <Html center>
+          <div
+            style={{
+              color: '#9ca3af',
+              fontSize: '18px',
+              textAlign: 'center',
+              padding: '20px',
+              background: 'rgba(15, 23, 42, 0.8)',
+              borderRadius: '8px',
+              border: '1px solid #334155',
+            }}
+          >
+            <div style={{ marginBottom: '8px', fontSize: '24px' }}>🔮</div>
+            <div>等待推理采样...</div>
+            <div style={{ fontSize: '14px', marginTop: '8px', color: '#64748b' }}>
+              候选Token将在此显示
+            </div>
+          </div>
+        </Html>
       )}
       <OrbitControls
         enablePan={true}

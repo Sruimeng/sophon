@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { useInferenceStore } from '~/store/inference';
 import { TOKEN_SPACING, LAYER_COUNT } from '~/constants/inference';
 import { AttentionLines } from './AttentionLines';
+import { useGeometryRegistry } from '~/lib/three/resource-manager';
 
 const LAYER_HEIGHT = 3;
 const LAYER_GAP = 0.5;
@@ -50,9 +51,14 @@ const ATTENTION_DURATION = 750;
 const FFN_DURATION = 750;
 const FFN_PULSE_AMPLITUDE = 0.2;
 
+const matrix = new THREE.Matrix4();
+const hiddenMatrix = new THREE.Matrix4();
+hiddenMatrix.setPosition(0, 1000, 0);
+
 export function TokenJourney() {
   const tokens = useInferenceStore((s) => s.tokens);
   const generatedTokens = useInferenceStore((s) => s.generatedTokens);
+  const status = useInferenceStore((s) => s.status);
   const setCurrentLayer = useInferenceStore((s) => s.setCurrentLayer);
   const { invalidate, clock } = useThree();
 
@@ -61,6 +67,9 @@ export function TokenJourney() {
   const [activeLayerIndex, setActiveLayerIndex] = useState(-1);
   const [showLayerLabel, setShowLayerLabel] = useState(false);
   const [currentPhase, setCurrentPhase] = useState<TokenPhase>('moving');
+  const prevPhaseRef = useRef<TokenPhase>('moving');
+  const prevLayerRef = useRef<number>(-1);
+  const matrixDirtyRef = useRef<boolean>(true);
 
   const visibleInputTokens = useMemo(
     () => tokens.slice(0, MAX_VISIBLE_TOKENS),
@@ -81,7 +90,7 @@ export function TokenJourney() {
 
   // Initialize states
   useEffect(() => {
-    if (allTokens.length === 0) {
+    if (allTokens.length === 0 || status === 'idle') {
       setTokenStates([]);
       setActiveLayerIndex(-1);
       return;
@@ -103,7 +112,8 @@ export function TokenJourney() {
     });
 
     setTokenStates(states);
-  }, [allTokens.length, getLayerY]);
+    matrixDirtyRef.current = true;
+  }, [allTokens.length, getLayerY, status]);
 
   useFrame(() => {
     if (tokenStates.length === 0) return;
@@ -157,43 +167,51 @@ export function TokenJourney() {
       minLayer = Math.min(minLayer, Math.max(0, state.currentLayer));
     });
 
-    setCurrentPhase(phaseForDisplay);
+    // 只在phase真正变化时更新state
+    if (phaseForDisplay !== prevPhaseRef.current) {
+      prevPhaseRef.current = phaseForDisplay;
+      setCurrentPhase(phaseForDisplay);
+    }
 
     if (phaseForDisplay === 'moving' && showLayerLabel) {
       setShowLayerLabel(false);
     }
 
-    const matrix = new THREE.Matrix4();
-    const hiddenMatrix = new THREE.Matrix4();
-    hiddenMatrix.setPosition(0, 1000, 0);
+    // 只在需要时更新matrix (移动中、FFN脉冲、或初始化)
+    const hasFfnPulse = tokenStates.some(s => s.phase === 'ffn' && !s.isComplete);
+    if (needsUpdate || matrixDirtyRef.current || hasFfnPulse) {
+      LAYER_VISUALS.forEach((_, layerIdx) => {
+        const mesh = layerMeshRefs.current[layerIdx];
+        if (!mesh) return;
 
-    LAYER_VISUALS.forEach((_, layerIdx) => {
-      const mesh = layerMeshRefs.current[layerIdx];
-      if (!mesh) return;
+        tokenStates.forEach((state, tokenIdx) => {
+          if (state.isComplete || state.currentLayer !== layerIdx) {
+            mesh.setMatrixAt(tokenIdx, hiddenMatrix);
+          } else {
+            matrix.identity();
+            const visual = LAYER_VISUALS[layerIdx];
 
-      tokenStates.forEach((state, tokenIdx) => {
-        if (state.currentLayer === layerIdx) {
-          matrix.identity();
-          const visual = LAYER_VISUALS[layerIdx];
+            let scale = visual.scale / 0.35;
+            if (state.phase === 'ffn') {
+              const elapsed = now - state.phaseStartTime;
+              const t = elapsed / FFN_DURATION;
+              scale *= 1 + FFN_PULSE_AMPLITUDE * Math.sin(t * Math.PI * 2);
+            }
 
-          let scale = visual.scale / 0.35;
-          if (state.phase === 'ffn') {
-            const elapsed = now - state.phaseStartTime;
-            const t = elapsed / FFN_DURATION;
-            scale *= 1 + FFN_PULSE_AMPLITUDE * Math.sin(t * Math.PI * 2);
+            matrix.makeScale(scale, scale, scale);
+            matrix.setPosition(state.position);
+            mesh.setMatrixAt(tokenIdx, matrix);
           }
-
-          matrix.makeScale(scale, scale, scale);
-          matrix.setPosition(state.position);
-          mesh.setMatrixAt(tokenIdx, matrix);
-        } else {
-          mesh.setMatrixAt(tokenIdx, hiddenMatrix);
-        }
+        });
+        mesh.instanceMatrix.needsUpdate = true;
       });
-      mesh.instanceMatrix.needsUpdate = true;
-    });
+      matrixDirtyRef.current = false;
+    }
 
-    if (minLayer >= 0) setCurrentLayer(minLayer);
+    if (minLayer >= 0 && minLayer !== prevLayerRef.current) {
+      prevLayerRef.current = minLayer;
+      setCurrentLayer(minLayer);
+    }
     if (needsUpdate || phaseForDisplay !== 'moving') invalidate();
   });
 
@@ -223,28 +241,66 @@ export function TokenJourney() {
         </Html>
       )}
 
-      {allTokens.length > 0 && LAYER_VISUALS.map((visual, layerIdx) => (
-        <instancedMesh
-          key={layerIdx}
-          ref={(el) => { layerMeshRefs.current[layerIdx] = el; }}
-          args={[undefined, undefined, allTokens.length]}
-          frustumCulled={false}
-        >
-          <sphereGeometry args={[0.35, visual.segments, visual.segments]} />
-          <meshStandardMaterial
-            color={visual.color}
-            emissive={visual.color}
-            emissiveIntensity={visual.emissive}
-            metalness={0.3}
-            roughness={0.4}
-          />
-        </instancedMesh>
-      ))}
+      <SphereInstances
+        layerMeshRefs={layerMeshRefs}
+        tokenCount={allTokens.length}
+      />
     </group>
   );
 }
 
+// Separate component to handle instance lifecycle
+function SphereInstances({
+  layerMeshRefs,
+  tokenCount,
+}: {
+  layerMeshRefs: { current: (THREE.InstancedMesh | null)[] };
+  tokenCount: number;
+}) {
+  const registry = useGeometryRegistry();
+
+  const geometries = useMemo(() =>
+    LAYER_VISUALS.map((visual, i) =>
+      registry.getSphere(`token-sphere-${i}`, 0.35, visual.segments)
+    ), [registry]
+  );
+
+  const materials = useMemo(() =>
+    LAYER_VISUALS.map((visual, i) =>
+      registry.getMaterial(`token-material-${i}`, () =>
+        new THREE.MeshStandardMaterial({
+          color: visual.color,
+          emissive: visual.color,
+          emissiveIntensity: visual.emissive,
+          metalness: 0.3,
+          roughness: 0.4,
+        })
+      )
+    ), [registry]
+  );
+
+  return (
+    <>
+      {LAYER_VISUALS.map((_, layerIdx) => (
+        <instancedMesh
+          key={layerIdx}
+          ref={(el) => { layerMeshRefs.current[layerIdx] = el; }}
+          args={[
+            geometries[layerIdx],
+            materials[layerIdx],
+            Math.max(tokenCount, MAX_VISIBLE_TOKENS)
+          ]}
+          frustumCulled={false}
+        />
+      ))}
+    </>
+  );
+}
+
 function LayerBoxes({ activeLayer }: { activeLayer: number }) {
+  const registry = useGeometryRegistry();
+  const boxGeometry = registry.getBox('layer-box', 16, LAYER_HEIGHT, 5);
+
   const layers = useMemo(() => {
     const result = [];
     for (let i = 0; i <= LAYER_COUNT + 1; i++) {
@@ -256,6 +312,17 @@ function LayerBoxes({ activeLayer }: { activeLayer: number }) {
     return result;
   }, []);
 
+  const edgesGeometry = useMemo(
+    () => new THREE.EdgesGeometry(boxGeometry),
+    [boxGeometry]
+  );
+
+  useEffect(() => {
+    return () => {
+      edgesGeometry.dispose();
+    };
+  }, [edgesGeometry]);
+
   return (
     <group>
       {layers.map((layer) => {
@@ -266,8 +333,7 @@ function LayerBoxes({ activeLayer }: { activeLayer: number }) {
 
         return (
           <group key={layer.index} position={[0, layer.y, 0]}>
-            <mesh>
-              <boxGeometry args={[16, LAYER_HEIGHT, 5]} />
+            <mesh geometry={boxGeometry}>
               <meshStandardMaterial
                 color={boxColor}
                 transparent
@@ -278,8 +344,7 @@ function LayerBoxes({ activeLayer }: { activeLayer: number }) {
             </mesh>
 
             {isActive && (
-              <lineSegments>
-                <edgesGeometry args={[new THREE.BoxGeometry(16, LAYER_HEIGHT, 5)]} />
+              <lineSegments geometry={edgesGeometry}>
                 <lineBasicMaterial color={visual.color} transparent opacity={0.8} />
               </lineSegments>
             )}

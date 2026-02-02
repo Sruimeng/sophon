@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@sruim/nexus-design';
+import { GradientSlider } from '~/components/ui/GradientSlider';
 import { checkWebGPU } from '~/lib/webgpu/check';
 import { initEngine, isEngineLoaded } from '~/lib/webllm/engine';
 import { tokenize } from '~/lib/webllm/tokenizer';
@@ -25,6 +27,8 @@ export function PromptForm() {
   const reset = useInferenceStore((s) => s.reset);
   const temperature = useInferenceStore((s) => s.temperature);
   const topP = useInferenceStore((s) => s.topP);
+  const tokenDelay = useInferenceStore((s) => s.tokenDelay);
+  const setTokenDelay = useInferenceStore((s) => s.setTokenDelay);
 
   const [prompt, setPrompt] = useState('');
   const [modelId, setModelId] = useState(MODELS[0].id);
@@ -80,6 +84,7 @@ export function PromptForm() {
           temperature,
           topP,
           maxTokens: 1024,
+          tokenDelay,
           onToken: (tokenText, tokenId, candidates) => {
             addGeneratedToken({
               id: tokenId,
@@ -104,7 +109,7 @@ export function PromptForm() {
         setPhase('idle');
       }
     },
-    [prompt, modelId, setTokens, setStatus, setGeneratedText, addGeneratedToken, setCandidates, setMetrics, reset, temperature, topP, t]
+    [prompt, modelId, setTokens, setStatus, setGeneratedText, addGeneratedToken, setCandidates, setMetrics, reset, temperature, topP, tokenDelay, t]
   );
 
   const isLoading = phase !== 'idle';
@@ -126,12 +131,29 @@ export function PromptForm() {
         </select>
       </div>
 
+      <div className="flex items-center gap-3">
+        <label className="text-sm text-slate-300 whitespace-nowrap font-medium">
+          {t('inference.speed', { defaultValue: '显示速度' })}
+        </label>
+        <GradientSlider
+          value={[tokenDelay]}
+          onValueChange={(val) => setTokenDelay(val[0])}
+          min={0}
+          max={2000}
+          step={100}
+          showValue
+          valueLabel="ms"
+          disabled={isLoading}
+          className="flex-1"
+        />
+      </div>
+
       <div className="flex gap-2">
         <input
           type="text"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder={t('inference.placeholder')}
+          placeholder={t('inference.placeholder', { defaultValue: '输入提示词...' })}
           disabled={isLoading}
           className="flex-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-4 py-2 text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:border-[var(--color-accent)] focus:outline-none disabled:opacity-50 transition-colors"
           onKeyDown={(e) => {
@@ -141,19 +163,21 @@ export function PromptForm() {
             }
           }}
         />
-        <button
+        <Button
           type="submit"
           disabled={isLoading}
-          className="rounded-lg bg-gradient-to-r from-[#f87171] to-[#fb923c] px-6 py-2 text-white font-medium shadow-lg shadow-orange-500/20 transition-all hover:shadow-orange-500/40 hover:shadow-xl disabled:opacity-50 whitespace-nowrap"
+          variant="solid"
+          size="large"
+          className="bg-gradient-to-r from-[#f87171] to-[#fb923c] shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:shadow-xl whitespace-nowrap"
         >
           {phase === 'loading-model'
             ? `${progress}%`
             : phase === 'tokenizing'
-              ? t('inference.tokenizing')
+              ? t('inference.tokenizing', { defaultValue: '分词中...' })
               : phase === 'inferring'
-                ? t('inference.generating')
-                : t('inference.send')}
-        </button>
+                ? t('inference.generating', { defaultValue: '生成中...' })
+                : t('inference.send', { defaultValue: '发送' })}
+        </Button>
       </div>
 
       {error && (

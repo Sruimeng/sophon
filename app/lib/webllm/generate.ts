@@ -43,6 +43,7 @@ export interface GenerateOptions {
   temperature?: number;
   topP?: number;
   maxTokens?: number;
+  tokenDelay?: number;
   onToken?: (token: string, tokenId: number, candidates: TokenCandidate[]) => void;
 }
 
@@ -59,7 +60,7 @@ export async function generate(options: GenerateOptions): Promise<GenerateResult
     throw new Error('Engine not initialized');
   }
 
-  const { prompt, temperature = 0.7, topP = 0.9, maxTokens = 256, onToken } = options;
+  const { prompt, temperature = 0.7, topP = 0.9, maxTokens = 256, tokenDelay = 0, onToken } = options;
 
   const messages: ChatCompletionMessageParam[] = [{ role: 'user', content: prompt }];
 
@@ -117,6 +118,10 @@ export async function generate(options: GenerateOptions): Promise<GenerateResult
       }
 
       onToken?.(delta, tokenCount, candidates);
+
+      if (tokenDelay > 0) {
+        await new Promise(resolve => setTimeout(resolve, tokenDelay));
+      }
     }
   }
 

@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Text } from '@react-three/drei';
+import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useRef } from 'react';
 import { LAYER_COUNT } from '~/constants/inference';
+import { useGeometryRegistry } from '~/lib/three/resource-manager';
 
 const LAYER_HEIGHT = 3;
 const LAYER_WIDTH = 20;
@@ -17,6 +18,20 @@ interface TransformerLayerProps {
 }
 
 function TransformerLayer({ index, isActive, label }: TransformerLayerProps) {
+  const registry = useGeometryRegistry();
+  const boxGeometry = registry.getBox('transformer-box', LAYER_WIDTH, LAYER_HEIGHT, LAYER_DEPTH);
+
+  const edgesGeometry = useMemo(
+    () => new THREE.EdgesGeometry(boxGeometry),
+    [boxGeometry]
+  );
+
+  useEffect(() => {
+    return () => {
+      edgesGeometry.dispose();
+    };
+  }, [edgesGeometry]);
+
   const meshRef = useRef<THREE.Mesh>(null);
   const y = -index * (LAYER_HEIGHT + LAYER_GAP);
 
@@ -33,9 +48,7 @@ function TransformerLayer({ index, isActive, label }: TransformerLayerProps) {
 
   return (
     <group position={[0, y, 0]}>
-      {/* Glass container */}
-      <mesh ref={meshRef}>
-        <boxGeometry args={[LAYER_WIDTH, LAYER_HEIGHT, LAYER_DEPTH]} />
+      <mesh ref={meshRef} geometry={boxGeometry}>
         <meshPhysicalMaterial
           color="#3b82f6"
           transparent
@@ -51,22 +64,22 @@ function TransformerLayer({ index, isActive, label }: TransformerLayerProps) {
         />
       </mesh>
 
-      {/* Layer edges */}
-      <lineSegments>
-        <edgesGeometry args={[new THREE.BoxGeometry(LAYER_WIDTH, LAYER_HEIGHT, LAYER_DEPTH)]} />
+      <lineSegments geometry={edgesGeometry}>
         <lineBasicMaterial color="#60a5fa" transparent opacity={0.5} />
       </lineSegments>
 
-      {/* Layer label */}
-      <Text
+      <Html
         position={[-LAYER_WIDTH / 2 - 0.5, 0, 0]}
-        fontSize={0.4}
-        color="#9ca3af"
-        anchorX="right"
-        anchorY="middle"
+        style={{
+          color: '#9ca3af',
+          fontSize: '14px',
+          whiteSpace: 'nowrap',
+          pointerEvents: 'none',
+          userSelect: 'none',
+        }}
       >
         {label}
-      </Text>
+      </Html>
     </group>
   );
 }
