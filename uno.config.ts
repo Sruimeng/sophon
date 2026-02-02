@@ -7,6 +7,7 @@ import {
   transformerVariantGroup,
 } from 'unocss';
 import presetAnimations from 'unocss-preset-animations';
+import { theme as nexusTheme } from '@sruim/nexus-design';
 
 export default defineConfig({
   presets: [
@@ -22,14 +23,17 @@ export default defineConfig({
   ],
   transformers: [transformerDirectives(), transformerVariantGroup(), transformerCompileClass()],
   theme: {
+    ...nexusTheme,
     colors: {
+      // Merge existing custom colors with Nexus theme
+      ...(nexusTheme.colors || {}),
+      // Legacy CSS variables
       background: 'rgba(var(--color-background) / <alpha-value>)',
       foreground: 'rgba(var(--color-foreground) / <alpha-value>)',
       primary: 'rgba(var(--color-primary) / <alpha-value>)',
       secondary: 'rgba(var(--color-secondary) / <alpha-value>)',
       accent: 'rgba(var(--color-accent) / <alpha-value>)',
       muted: 'rgba(var(--color-muted) / <alpha-value>)',
-      border: 'rgba(var(--color-border) / <alpha-value>)',
     },
   },
   rules: [

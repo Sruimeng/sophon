@@ -23,5 +23,42 @@
     "edit": "编辑",
     "loading": "加载中...",
     "welcome": "欢迎使用！"
+  },
+  "inference": {
+    "title": "Token 旅程",
+    "subtitle": "使用 WebGPU 驱动的 3D 图形可视化 LLM 推理",
+    "send": "发送",
+    "generating": "生成中...",
+    "tokenizing": "分词中...",
+    "placeholder": "输入提示词...",
+    "promptRequired": "请输入提示词",
+    "webgpuNotSupported": "浏览器不支持 WebGPU",
+    "failed": "失败",
+    "layers": {
+      "title": "Transformer 层",
+      "embedding": "嵌入层",
+      "block": "块"
+    },
+    "sampling": {
+      "temperature": "温度",
+      "topP": "Top-P"
+    },
+    "probability": {
+      "title": "候选词"
+    },
+    "tokens": {
+      "input": "输入",
+      "generated": "生成",
+      "output": "输出"
+    },
+    "metrics": {
+      "title": "指标",
+      "in": "输入",
+      "out": "输出",
+      "speed": "速度",
+      "time": "耗时",
+      "gpu": "显卡",
+      "tokensPerSecond": "词/秒"
+    }
   }
 }
